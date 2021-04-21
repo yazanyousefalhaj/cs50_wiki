@@ -12,12 +12,10 @@ def index(request):
     if title := request.GET.get('q', ''):
         entry = util.get_entry(title)
         if entry:
-            return render(request, "encyclopedia/entry.html", {
-                "entry": entry
-            })
+            return redirect(reverse("entry", kwargs={"title": title}))
 
         entries = util.list_entries()
-        matches = [match for match in entries if match.startswith(title)]
+        matches = [match for match in entries if title in match]
 
         return render(request, "encyclopedia/index.html", {
             "entries": matches
@@ -50,8 +48,9 @@ def new_page(request):
     else:
         entry_form = forms.NewEntryFrom()
     return render(request, "encyclopedia/edit_form.html", {
-        "entry_form": entry_form,
+        "form": entry_form,
         "url": reverse("new_page"),
+        "submit_button_text": "New Entry",
     })
 
 
@@ -59,7 +58,6 @@ def edit_page(request, title):
     if request.method == "POST":
         entry_form = forms.EditEntryFrom(request.POST)
         if entry_form.is_valid():
-            title = entry_form.cleaned_data["title"]
             body = entry_form.cleaned_data["body"]
             util.save_entry(title, body)
             return redirect(reverse("entry", kwargs={"title": title}))
@@ -67,8 +65,9 @@ def edit_page(request, title):
         entry = util.get_entry(title)
         entry_form = forms.EditEntryFrom({"title": title, "body":entry})
     return render(request, "encyclopedia/edit_form.html", {
-        "entry_form": entry_form,
+        "form": entry_form,
         "url": reverse("edit_page", kwargs={"title": title}),
+        "submit_button_text": "Edit",
     })
 
 
